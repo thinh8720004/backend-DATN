@@ -1,0 +1,7 @@
+node_modules
+ 
+
+.vercel
+/.idea/backend-api-family-pharmacy-node-project.iml
+/.idea/modules.xml
+/.idea/vcs.xml

@@ -16,7 +16,7 @@ const settingRoutes = require("../routes/settingRoutes");
 const homePageRoutes = require("../routes/homepageRoutes");
 const cartRoutes = require('../routes/cartRoutes');
 const reviewsRoutes = require('../routes/reviewRoutes');
-
+const contactRoutes = require('../routes/contact')
 connectDB();
 const app = express();
 
@@ -52,12 +52,16 @@ app.use("/homepage/", homePageRoutes);
 //if you not use admin dashboard then these two route will not needed.
 app.use("/admin/", adminRoutes);
 app.use("/orders/", orderRoutes);
+app.use("/contact/", contactRoutes);
+
 
 // Use express's default error handling middleware
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(400).json({ message: err.message });
 });
+// app.use(express.urlencoded({ extended: true })); //// Middleware để xử lý x-www-form-urlencoded
+
 
 const PORT = process.env.PORT || 5000;
 

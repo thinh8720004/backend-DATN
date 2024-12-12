@@ -5,7 +5,7 @@ const Cart = require("../models/Cart");
 const addTocart = async (req, res) => {
   const { productId, variant, quantity, price } = req.body;
   const userId = req.user._id;
-  console.log(variant);
+  console.log("variant", variant);
   try {
     const product = await Product.findById(productId);
     if (!product) {

@@ -13,8 +13,7 @@ const {
 } = require("../controller/customerOrderController");
 const { guestAuth, isAuth } = require("../config/auth");
 
-//add a order
-router.post("/guest-add", guestAuth, addOrder);
+
 
 router.post("/add", isAuth, addOrder);
 

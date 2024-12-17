@@ -5,18 +5,26 @@ const helmet = require("helmet");
 const logger = require("morgan");
 
 const { connectDB } = require("../config/db");
-const productRoutes = require("../routes/productRoutes");
+// Rồi
 const customerRoutes = require("../routes/customerRoutes");
+//Rồi
 const adminRoutes = require("../routes/adminRoutes");
+//Rồi
 const orderRoutes = require("../routes/orderRoutes");
+
+const reviewsRoutes = require('../routes/reviewRoutes');
 const customerOrderRoutes = require("../routes/customerOrderRoutes");
+///////////////
+const cartRoutes = require('../routes/cartRoutes');
 const categoryRoutes = require("../routes/categoryRoutes");
 const supplierRoutes = require("../routes/supplierRoutes");
-const settingRoutes = require("../routes/settingRoutes");
-const homePageRoutes = require("../routes/homepageRoutes");
-const cartRoutes = require('../routes/cartRoutes');
-const reviewsRoutes = require('../routes/reviewRoutes');
+
+const productRoutes = require("../routes/productRoutes");
+
 const contactRoutes = require('../routes/contact')
+const homePageRoutes = require("../routes/homepageRoutes");
+const settingRoutes = require("../routes/settingRoutes");
+
 connectDB();
 const app = express();
 
@@ -37,23 +45,28 @@ app.get("/", (req, res) => {
 });
 
 //this for route will need for store front, also for admin dashboard
+
+//Rồi
+app.use("/customer/", customerRoutes);
+// Rồi 
+app.use("/admin/", adminRoutes);
+//Rồi
+app.use("/order/", customerOrderRoutes);
+
+//admijn
+app.use("/orders/", orderRoutes);
+//...
+app.use("/reviews/", reviewsRoutes);
+//////
+
+//if you not use admin dashboard then these two route will not needed.
+app.use("/contact/", contactRoutes);
 app.use("/products/", productRoutes);
 app.use("/category/", categoryRoutes);
 app.use("/supplier/", supplierRoutes);
-
-app.use("/customer/", customerRoutes);
-app.use("/order/", customerOrderRoutes);
-app.use("/setting/", settingRoutes);
 app.use("/cart/", cartRoutes);
-app.use("/reviews/", reviewsRoutes);
-
 app.use("/homepage/", homePageRoutes);
-
-//if you not use admin dashboard then these two route will not needed.
-app.use("/admin/", adminRoutes);
-app.use("/orders/", orderRoutes);
-app.use("/contact/", contactRoutes);
-
+app.use("/setting/", settingRoutes);
 
 // Use express's default error handling middleware
 app.use((err, req, res, next) => {

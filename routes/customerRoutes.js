@@ -18,6 +18,7 @@ const {
   passwordVerificationLimit,
   emailVerificationLimit,
 } = require("../lib/email-sender/sender");
+const { isAuth } = require('../config/auth');
 
 //verify email
 router.post("/verify-email",   verifyEmailAddress);
@@ -29,9 +30,6 @@ router.post("/register", registerCustomer);
 //login a user
 router.post("/login", loginCustomer);
 
-//register or login with google and fb
-router.post("/signup/:token", signUpWithProvider);
-
 //forget-password
 router.put("/forget-password", passwordVerificationLimit, forgetPassword);
 
@@ -39,10 +37,7 @@ router.put("/forget-password", passwordVerificationLimit, forgetPassword);
 router.put("/reset-password", resetPassword);
 
 //change password
-router.post("/change-password", changePassword);
-
-//add all users
-router.post("/add/all", addAllCustomers);
+router.post("/change-password", changePassword,isAuth);
 
 //get all user
 router.get("/", getAllCustomers);
@@ -56,4 +51,12 @@ router.put("/:id", updateCustomer);
 //delete a user
 router.delete("/:id", deleteCustomer);
 
+
+
+
+//add all users
+router.post("/add/all", addAllCustomers);
+
+//register or login with google and fb
+router.post("/signup/:token", signUpWithProvider);
 module.exports = router;

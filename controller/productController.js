@@ -145,12 +145,17 @@ const getAllProducts = async (req, res) => {
   }
   //  console.log('title',title)
   let queryObject = {};
+  const currentDate = new Date().toISOString().split("T")[0];
+  queryObject.$or = [
+    { dateExpried: { $gt: currentDate } },
+    { dateExpried: null },
+  ];
   let sortObject = {};
 
   if (title) {
     queryObject.$or = [{ title: { $regex: `${title}`, $options: "i" } }];
   }
-  
+
   if (minPrice && maxPrice) {
     queryObject["prices.originalPrice"] = { $gte: minPrice, $lte: maxPrice };
   }
@@ -318,6 +323,7 @@ const updateProduct = async (req, res) => {
       product.prices = req.body.prices;
       product.image = req.body.image;
       product.tag = req.body.tag;
+      product.dateExpried = req.body.dateExpried;
 
       await product.save();
       res.send({ data: product, message: "Product updated successfully!" });

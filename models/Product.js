@@ -72,7 +72,14 @@ const productSchema = new mongoose.Schema(
         required: false,
       },
     },
-
+    dateExpried: {
+      type: String,
+      required: false,
+    },
+    type: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       default: "show",

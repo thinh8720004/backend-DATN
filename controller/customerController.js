@@ -14,7 +14,9 @@ const {
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
+//gửi mã verify về mail 
 const verifyEmailAddress = async (req, res) => {
+  // kiểm tra đã tồn tại email chưa
   const isAdded = await Customer.findOne({ email: req.body.email });
   if (isAdded) {
     return res.status(403).send({
@@ -22,17 +24,21 @@ const verifyEmailAddress = async (req, res) => {
       message: "This Email already Added!",
     });
   } else {
+    //gắn token bằng token 15p, 
     const token = tokenForVerify(req.body);
     const option = {
       name: req.body.name,
       email: req.body.email,
       token: token,
     };
+
+    //gửi email về 
     const body = {
       from: process.env.EMAIL_USER,
       to: `${req.body.email}`,
       subject: "Email Activation",
       subject: "Verify Your Email",
+      //form gửi thông báo
       html: customerRegisterBody(option),
     };
 
@@ -41,7 +47,9 @@ const verifyEmailAddress = async (req, res) => {
   }
 };
 
+// liên kết với nút xác minh ngay trong mail
 const registerCustomer = async (req, res, next) => {
+  //lấy token về kiểm tra
   const token = req.params.token;
   try {
     if (!token) {
@@ -50,8 +58,11 @@ const registerCustomer = async (req, res, next) => {
         message: "Token is required",
       });
     }
+    //Bước 2: Giải mã token để lấy thông tin người dùng
+
     const { name, email, password } = jwt.decode(token);
     const isAdded = await Customer.findOne({ email: email });
+//Bước 3: Kiểm tra email đã tồn tại trong cơ sở dữ liệu chưa
 
     if (isAdded) {
       const token = signInToken(isAdded);
@@ -64,6 +75,7 @@ const registerCustomer = async (req, res, next) => {
         message: "Email Already Verified!",
       });
     }
+//Bước 4: Xác minh token và tạo người dùng mới
 
     jwt.verify(
       token,
@@ -98,22 +110,7 @@ const registerCustomer = async (req, res, next) => {
   }
 };
 
-const addAllCustomers = async (req, res) => {
-  try {
-    await Customer.deleteMany();
-    await Customer.insertMany(req.body);
-    res.send({
-      status: true,
-      message: "Added all users successfully!",
-    });
-  } catch (err) {
-    res.status(500).send({
-      status: false,
-      message: err.message,
-    });
-  }
-};
-
+// đăng nhập 
 const loginCustomer = async (req, res) => {
   try {
     const customer = await Customer.findOne({ email: req.body.email });
@@ -124,6 +121,8 @@ const loginCustomer = async (req, res) => {
       customer.password &&
       bcrypt.compareSync(req.body.password, customer.password)
     ) {
+      //jwt.sign là một hàm trong thư viện jsonwebtoken (JWT) dùng để tạo và ký một JSON Web Token (JWT). 
+      // JWT là một chuỗi mã hóa được sử dụng phổ biến trong việc xác thực và truyền tải thông tin an toàn giữa các bên trong ứng dụng web.
       const token = signInToken(customer);
       res.send({
         token,
@@ -145,34 +144,9 @@ const loginCustomer = async (req, res) => {
     });
   }
 };
+//
 
-const forgetPassword = async (req, res) => {
-  const isAdded = await Customer.findOne({ email: req.body.verifyEmail });
-  if (!isAdded) {
-    return res.status(404).send({
-      status: false,
-      message: "User Not found with this email!",
-    });
-  } else {
-    const token = tokenForVerify(isAdded);
-    const option = {
-      name: isAdded.name,
-      email: isAdded.email,
-      token: token,
-    };
-
-    const body = {
-      from: process.env.EMAIL_USER,
-      to: `${req.body.verifyEmail}`,
-      subject: "Password Reset",
-      html: forgetPasswordEmailBody(option),
-    };
-
-    const message = "Please check your email to reset password!";
-    sendEmail(body, res, message);
-  }
-};
-
+// Mật khẩu được gửi về mail
 const resetPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -201,7 +175,7 @@ const resetPassword = async (req, res) => {
     customer.password = bcrypt.hashSync(newPassword, 10);
     await customer.save();
 
-    const changePasswordLink = `http://localhost:3000/changePassword`;
+    const changePasswordLink = `process.env.STORE_URL/changePassword`;
 
     // Gửi email chứa mật khẩu mới
     const transporter = nodemailer.createTransport({
@@ -261,32 +235,128 @@ const resetPassword = async (req, res) => {
     });
   }
 };
-
+// đổi lại mật khẩu
 const changePassword = async (req, res) => {
   try {
+    // Tìm kiếm khách hàng (customer) trong database bằng email được gửi từ request body
     const customer = await Customer.findOne({ email: req.body.email });
+
+    // Kiểm tra xem tài khoản có mật khẩu không
     if (!customer.password) {
       return res.send({
         status: false,
-        message:
-          "For change password,You need to sign in with email & password!",
+        message: "For change password, You need to sign in with email & password!",
       });
-    } else if (
+    }
+    // Kiểm tra nếu tài khoản tồn tại và mật khẩu hiện tại khớp với mật khẩu đã lưu trong database
+    else if (
       customer &&
-      bcrypt.compareSync(req.body.currentPassword, customer.password)
+      bcrypt.compareSync(req.body.currentPassword, customer.password) // So sánh mật khẩu nhập vào với mật khẩu đã băm trong database
     ) {
-      customer.password = bcrypt.hashSync(req.body.newPassword);
-      await customer.save();
+      // Nếu mật khẩu khớp, tiến hành băm mật khẩu mới và cập nhật vào tài khoản
+      customer.password = bcrypt.hashSync(req.body.newPassword); // Băm mật khẩu mới
+      await customer.save(); // Lưu thay đổi vào database
+
+      // Phản hồi thành công cho client
       res.send({
         status: true,
         message: "Your password change successfully!",
       });
     } else {
+      // Trường hợp email không đúng hoặc mật khẩu hiện tại không khớp
       res.status(401).send({
         status: false,
         message: "Invalid email or current password!",
       });
     }
+  } catch (err) {
+    // Xử lý các lỗi trong quá trình thực thi
+    res.status(500).send({
+      status: false,
+      message: err.message, // Gửi thông báo lỗi cho client
+    });
+  }
+};
+
+// Hiển thị toàn bộ khách hàng ,phía admin, sắp xếp theo id giảm dần
+const getAllCustomers = async (req, res) => {
+  try {
+    const users = await Customer.find({}).sort({ _id: -1 });
+    res.send(users);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// Hiển thị theo id
+const getCustomerById = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    res.send(customer);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+//Cập nhật thông tin
+const updateCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (customer) {
+      customer.name = req.body.name;
+      customer.email = req.body.email;
+      customer.address = req.body.address;
+      customer.phone = req.body.phone;
+      customer.image = req.body.image;
+      const updatedUser = await customer.save();
+      const token = signInToken(updatedUser);
+      res.send({
+        token,
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        address: updatedUser.address,
+        phone: updatedUser.phone,
+        image: updatedUser.image,
+      });
+    }
+  } catch (err) {
+    res.status(404).send({
+      message: "Your email is not valid!",
+    });
+  }
+};
+
+// xoá người dùng
+const deleteCustomer = async (req, res) => {
+  try {
+    const result = await Customer.deleteOne({ _id: req.params.id });
+    if (result.deletedCount === 0) {
+      return res.status(404).send({
+        message: "User not found!",
+      });
+    }
+    res.status(200).send({
+      message: "User Deleted Successfully!",
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+
+const addAllCustomers = async (req, res) => {
+  try {
+    await Customer.deleteMany();
+    await Customer.insertMany(req.body);
+    res.send({
+      status: true,
+      message: "Added all users successfully!",
+    });
   } catch (err) {
     res.status(500).send({
       status: false,
@@ -294,6 +364,7 @@ const changePassword = async (req, res) => {
     });
   }
 };
+
 
 const signUpWithProvider = async (req, res) => {
   try {
@@ -346,72 +417,34 @@ const signUpWithProvider = async (req, res) => {
   }
 };
 
-const getAllCustomers = async (req, res) => {
-  try {
-    const users = await Customer.find({}).sort({ _id: -1 });
-    res.send(users);
-  } catch (err) {
-    res.status(500).send({ message: err.message });
+const forgetPassword = async (req, res) => {
+  const isAdded = await Customer.findOne({ email: req.body.verifyEmail });
+  if (!isAdded) {
+    return res.status(404).send({
+      status: false,
+      message: "User Not found with this email!",
+    });
+  } else {
+    //Hàm này tạo JWT token để xác thực thông tin của người dùng trong các tình huống cần xác minh,
+    //  chẳng hạn như đặt lại mật khẩu hoặc kích hoạt tài khoản. Token này chỉ có hiệu lực trong 15 phút.
+    const token = tokenForVerify(isAdded);
+    const option = {
+      name: isAdded.name,
+      email: isAdded.email,
+      token: token,
+    };
+
+    const body = {
+      from: process.env.EMAIL_USER,
+      to: `${req.body.verifyEmail}`,
+      subject: "Password Reset",
+      html: forgetPasswordEmailBody(option),
+    };
+
+    const message = "Please check your email to reset password!";
+    sendEmail(body, res, message);
   }
 };
-
-const getCustomerById = async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
-    res.send(customer);
-  } catch (err) {
-    res.status(500).send({
-      message: err.message,
-    });
-  }
-};
-
-const updateCustomer = async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
-    if (customer) {
-      customer.name = req.body.name;
-      customer.email = req.body.email;
-      customer.address = req.body.address;
-      customer.phone = req.body.phone;
-      customer.image = req.body.image;
-      const updatedUser = await customer.save();
-      const token = signInToken(updatedUser);
-      res.send({
-        token,
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        address: updatedUser.address,
-        phone: updatedUser.phone,
-        image: updatedUser.image,
-      });
-    }
-  } catch (err) {
-    res.status(404).send({
-      message: "Your email is not valid!",
-    });
-  }
-};
-
-const deleteCustomer = async (req, res) => {
-  try {
-    const result = await Customer.deleteOne({ _id: req.params.id });
-    if (result.deletedCount === 0) {
-      return res.status(404).send({
-        message: "User not found!",
-      });
-    }
-    res.status(200).send({
-      message: "User Deleted Successfully!",
-    });
-  } catch (err) {
-    res.status(500).send({
-      message: err.message,
-    });
-  }
-};
-
 module.exports = {
   loginCustomer,
   registerCustomer,

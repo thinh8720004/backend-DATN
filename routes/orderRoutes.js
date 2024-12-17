@@ -13,34 +13,34 @@ const {
   getDashboardAmount,
 } = require("../controller/orderController");
 
-//get all orders
+// Lấy tất cả đơn hàng
 router.get("/", getAllOrders);
 
-// get dashboard orders data
+// Hiển thị các đơn hàng trên trang điều khiển (Dashboard)
 router.get("/dashboard", getDashboardOrders);
 
-// dashboard recent-order
+// Hiển thị các đơn hàng gần đây trên trang điều khiển (Dashboard)
 router.get("/dashboard-recent-order", getDashboardRecentOrder);
 
-// dashboard order count
+// Lấy tổng số đơn hàng trên trang điều khiển (Dashboard)
 router.get("/dashboard-count", getDashboardCount);
 
-// dashboard order amount
+// Lấy tổng giá trị đơn hàng trên trang điều khiển (Dashboard)
 router.get("/dashboard-amount", getDashboardAmount);
 
-// chart data for product
+// Lấy dữ liệu biểu đồ sản phẩm bán chạy nhất
 router.get("/best-seller/chart", bestSellerProductChart);
 
-//get all order by a user
+// Lấy tất cả đơn hàng của một khách hàng theo ID
 router.get("/customer/:id", getOrderCustomer);
 
-//get a order by id
+// Lấy thông tin chi tiết của một đơn hàng theo ID
 router.get("/:id", getOrderById);
 
-//update a order
+// Cập nhật thông tin của một đơn hàng theo ID
 router.put("/:id", updateOrder);
 
-//delete a order
+// Xóa một đơn hàng theo ID
 router.delete("/:id", deleteOrder);
 
 module.exports = router;

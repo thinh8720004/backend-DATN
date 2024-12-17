@@ -6,6 +6,76 @@ const jwt = require("jsonwebtoken");
 const { signInToken, tokenForVerify, sendEmail } = require("../config/auth");
 const Admin = require("../models/Admin");
 
+const loginAdmin = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ email: req.body.email });
+    if (admin && bcrypt.compareSync(req.body.password, admin.password)) {
+      const token = signInToken(admin);
+      res.send({
+        token,
+        _id: admin._id,
+        name: admin.name,
+        phone: admin.phone,
+        email: admin.email,
+        image: admin.image,
+      });
+    } else {
+      res.status(401).send({
+        message: "Invalid Email or password!",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const registerAdmin = async (req, res) => {
   try {
     const isAdded = await Admin.findOne({ email: req.body.email });
@@ -38,30 +108,7 @@ const registerAdmin = async (req, res) => {
   }
 };
 
-const loginAdmin = async (req, res) => {
-  try {
-    const admin = await Admin.findOne({ email: req.body.email });
-    if (admin && bcrypt.compareSync(req.body.password, admin.password)) {
-      const token = signInToken(admin);
-      res.send({
-        token,
-        _id: admin._id,
-        name: admin.name,
-        phone: admin.phone,
-        email: admin.email,
-        image: admin.image,
-      });
-    } else {
-      res.status(401).send({
-        message: "Invalid Email or password!",
-      });
-    }
-  } catch (err) {
-    res.status(500).send({
-      message: err.message,
-    });
-  }
-};
+
 
 const forgetPassword = async (req, res) => {
   const isAdded = await Admin.findOne({ email: req.body.verifyEmail });
